@@ -159,6 +159,156 @@ server {
 }
 ```
 
+## PGP Key Generation
+
+Before using xsukax PGP Secure Chat, you need to generate a PGP key pair. This section provides step-by-step instructions for creating your cryptographic keys using GnuPG (GPG).
+
+### Prerequisites for Key Generation
+
+- GnuPG (GPG) installed on your system
+- Basic understanding of public-key cryptography concepts
+- Secure environment for key generation (offline recommended for maximum security)
+
+### Installing GnuPG
+
+**Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install gnupg
+```
+
+**CentOS/RHEL/Rocky:**
+```bash
+sudo yum install gnupg2
+# or for newer versions:
+sudo dnf install gnupg2
+```
+
+**macOS:**
+```bash
+brew install gnupg
+```
+
+**Windows:**
+Download and install GPG4Win from https://gpg4win.org/
+
+### Step-by-Step Key Generation
+
+#### 1. Generate Your Key Pair
+
+Run the following command to start the interactive key generation process:
+
+```bash
+gpg --full-generate-key
+```
+
+**During the interactive process, you will be prompted for:**
+
+- **Key type**: Select `(1) RSA and RSA (default)`
+- **Key size**: Choose `4096` bits for maximum security
+- **Key expiration**: Set according to your security policy (recommend 1-2 years)
+- **Real name**: Enter your name or identifier
+- **Email address**: Enter your email (can be fictional for privacy)
+- **Comment**: Optional description field
+- **Passphrase**: Choose a strong passphrase to protect your private key
+
+**Example output:**
+```
+pub   rsa4096 2025-09-20 [SC]
+      5BE31FC1655C5D57F4EE4578E0B17789DB4D8F77
+uid                      Your Name <your.email@domain.com>
+sub   rsa4096 2025-09-20 [E]
+```
+
+#### 2. Export Your Public Key
+
+Use your key ID (the long hexadecimal string) to export your public key:
+
+```bash
+gpg --armor --export YOUR_KEY_ID > public_key.asc
+```
+
+**Example:**
+```bash
+gpg --armor --export 5BE31FC1655C5D57F4EE4578E0B17789DB4D8F77 > public_key.asc
+```
+
+#### 3. Export Your Private Key
+
+Export your private key using the same key ID:
+
+```bash
+gpg --armor --export-secret-keys YOUR_KEY_ID > private_key.asc
+```
+
+**Example:**
+```bash
+gpg --armor --export-secret-keys 5BE31FC1655C5D57F4EE4578E0B17789DB4D8F77 > private_key.asc
+```
+
+### Key Management Best Practices
+
+#### Security Recommendations
+
+- **Secure Storage**: Store your private key in a secure location with restricted access
+- **Backup Strategy**: Create encrypted backups of your private key and store them separately
+- **Passphrase Strength**: Use a strong, unique passphrase for your private key
+- **Key Expiration**: Set reasonable expiration dates and renew keys regularly
+- **Revocation Certificate**: Generate a revocation certificate and store it securely
+
+#### Verifying Your Keys
+
+After generation, verify your keys are correctly created:
+
+```bash
+# List your secret keys
+gpg --list-secret-keys
+
+# List your public keys
+gpg --list-keys
+
+# Check key fingerprint
+gpg --fingerprint YOUR_KEY_ID
+```
+
+#### Key File Format
+
+Your exported keys will be in ASCII-armored format (.asc files):
+
+- **public_key.asc**: Contains your public key for sharing with others
+- **private_key.asc**: Contains your private key (keep this secret and secure)
+
+Both files can be directly uploaded to the xsukax PGP Secure Chat application.
+
+### Alternative Key Generation Methods
+
+#### Using Kleopatra (Windows/GUI)
+
+For users who prefer a graphical interface:
+
+1. Install GPG4Win with Kleopatra
+2. Open Kleopatra
+3. Click "New Key Pair"
+4. Follow the wizard to generate your keys
+5. Export keys in ASCII-armored format
+
+#### Using GPG Suite (macOS)
+
+1. Install GPG Suite
+2. Open GPG Keychain
+3. Click "New" to create a key pair
+4. Export keys in .asc format
+
+### Security Considerations
+
+**Important Security Notes:**
+
+- Never share your private key with anyone
+- Use the application only after verifying the server's authenticity
+- Consider generating keys on an air-gapped system for maximum security
+- Regularly audit your key usage and revoke compromised keys
+- Verify key fingerprints when exchanging public keys with contacts
+
 ## Usage Guide
 
 ### Initial Setup
@@ -204,7 +354,6 @@ sequenceDiagram
     A->>S: Send encrypted message
     S->>B: Forward encrypted message
     B->>B: Decrypt with private key
-    
 ```
 
 ### Step-by-Step Communication Process
