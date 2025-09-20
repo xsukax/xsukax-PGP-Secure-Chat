@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xsukax PGP Secure Chat</title>
+    <script src="https://unpkg.com/openpgp@5.10.2/dist/openpgp.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body { font-family: 'Consolas', 'Monaco', 'Courier New', monospace; background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%); color: #00ff41; line-height: 1.6; }
+        .header { background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 255, 65, 0.2); position: sticky; top: 0; z-index: 100; height: 60px; }
+        .logo { font-size: 20px; font-weight: 700; color: #00ff41; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; text-shadow: 0 0 10px rgba(0, 255, 65, 0.3); }
+        .status-indicator { width: 8px; height: 8px; background: #00ff41; border-radius: 50%; box-shadow: 0 0 10px rgba(0, 255, 65, 0.5); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .container { height: calc(100vh - 60px); display: grid; grid-template-columns: 320px 1fr; gap: 0; overflow: hidden; }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; grid-template-rows: auto 1fr; } .sidebar { max-height: 40vh; overflow-y: auto; } }
+        .sidebar { background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(20px); padding: 20px; border-right: 1px solid rgba(0, 255, 65, 0.1); overflow-y: auto; }
+        .chat-area { background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(20px); display: flex; flex-direction: column; overflow: hidden; }
+        .input { width: 100%; padding: 10px 14px; border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 6px; margin-bottom: 12px; background: rgba(30, 30, 30, 0.8); color: #00ff41; font-family: inherit; font-size: 13px; transition: all 0.3s ease; }
+        .input:focus { outline: none; border-color: #00ff41; box-shadow: 0 0 0 2px rgba(0, 255, 65, 0.1); }
+        .btn { background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%); color: #000; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; width: 100%; margin-bottom: 12px; font-family: inherit; font-weight: 600; font-size: 12px; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0, 255, 65, 0.3); }
+        .btn:disabled { background: #444; color: #666; cursor: not-allowed; transform: none; box-shadow: none; }
+        .file-input { width: 100%; padding: 8px 12px; border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 6px; margin-bottom: 8px; background: rgba(30, 30, 30, 0.8); color: #00ff41; font-family: inherit; font-size: 12px; transition: all 0.3s ease; }
+        .messages { flex: 1; padding: 20px; overflow-y: auto; border-bottom: 1px solid rgba(0, 255, 65, 0.1); }
+        .message { margin-bottom: 15px; padding: 12px 16px; border-radius: 12px; max-width: 80%; position: relative; animation: messageSlide 0.3s ease; }
+        @keyframes messageSlide { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .message.own { background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%); color: #000; margin-left: auto; border-bottom-right-radius: 4px; }
+        .message.other { background: rgba(0, 255, 65, 0.1); color: #00ff41; border-bottom-left-radius: 4px; border: 1px solid rgba(0, 255, 65, 0.2); }
+        .msg-header { font-size: 10px; opacity: 0.7; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .msg-content { word-wrap: break-word; font-size: 13px; line-height: 1.4; }
+        .input-area { padding: 15px 20px; display: flex; gap: 12px; align-items: flex-end; background: rgba(0, 255, 65, 0.02); border-top: 1px solid rgba(0, 255, 65, 0.1); }
+        .msg-input { flex: 1; padding: 12px 16px; border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 8px; resize: vertical; min-height: 40px; max-height: 100px; background: rgba(30, 30, 30, 0.8); color: #00ff41; font-family: inherit; font-size: 13px; transition: all 0.3s ease; }
+        .msg-input:focus { outline: none; border-color: #00ff41; box-shadow: 0 0 0 2px rgba(0, 255, 65, 0.1); }
+        .send-btn { background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%); color: #000; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 12px; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
+        .send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0, 255, 65, 0.3); }
+        .send-btn:disabled { background: #444; color: #666; cursor: not-allowed; transform: none; box-shadow: none; }
+        .status { font-size: 12px; color: rgba(0, 255, 65, 0.7); text-align: center; padding: 20px; opacity: 0.8; font-style: italic; }
+        .user-id { background: linear-gradient(135deg, rgba(0, 255, 65, 0.1) 0%, rgba(0, 255, 65, 0.2) 100%); color: #00ff41; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; text-align: center; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s ease; border: 1px solid rgba(0, 255, 65, 0.2); text-shadow: 0 0 10px rgba(0, 255, 65, 0.3); }
+        .user-id:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0, 255, 65, 0.2); }
+        .friend-item { padding: 12px 16px; margin-bottom: 8px; background: rgba(40, 40, 40, 0.6); border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: all 0.3s ease; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #00ff41; }
+        .friend-item:hover { background: rgba(60, 60, 60, 0.8); border-color: #00ff41; transform: translateX(3px); }
+        .friend-item.active { border-color: #00ff41; background: linear-gradient(135deg, rgba(0, 255, 65, 0.1) 0%, rgba(0, 255, 65, 0.2) 100%); color: #00ff41; }
+        .error { color: #ff6b6b; background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(220, 53, 69, 0.1) 100%); padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; font-weight: 600; border: 1px solid rgba(220, 53, 69, 0.3); }
+        .success { color: #51cf66; background: linear-gradient(135deg, rgba(21, 87, 36, 0.2) 0%, rgba(21, 87, 36, 0.1) 100%); padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; font-weight: 600; border: 1px solid rgba(21, 87, 36, 0.3); }
+        h3 { margin-bottom: 16px; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #00ff41; text-shadow: 0 0 5px rgba(0, 255, 65, 0.3); }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .modal.show { opacity: 1; visibility: visible; }
+        .modal-content { background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(20px); padding: 30px; border-radius: 12px; width: 90%; max-width: 450px; text-align: center; border: 1px solid rgba(0, 255, 65, 0.2); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); transform: scale(0.9); transition: all 0.3s ease; }
+        .modal.show .modal-content { transform: scale(1); }
+        .modal-content h2, .modal-content h3 { color: #00ff41; margin-bottom: 15px; text-shadow: 0 0 10px rgba(0, 255, 65, 0.3); }
+        .modal-content p { color: rgba(0, 255, 65, 0.8); margin-bottom: 20px; }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
+        .test-btn { background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%); color: #000; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; flex: 1; font-family: inherit; font-weight: 600; font-size: 12px; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
+        .test-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); }
+        .connect-btn { background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%); color: #000; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; flex: 1; font-family: inherit; font-weight: 600; font-size: 12px; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
+        .connect-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0, 255, 65, 0.3); }
+        .connect-btn:disabled { background: #444; color: #666; cursor: not-allowed; transform: none; box-shadow: none; }
+        .key-upload { background: rgba(40, 40, 40, 0.4); border: 1px solid rgba(0, 255, 65, 0.1); border-radius: 8px; padding: 16px; margin-bottom: 20px; transition: all 0.3s ease; }
+        .key-upload h4 { margin-bottom: 12px; color: rgba(0, 255, 65, 0.8); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .key-label { font-size: 11px; color: rgba(0, 255, 65, 0.7); margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .status-bar { background: rgba(40, 40, 40, 0.6); border: 1px solid rgba(0, 255, 65, 0.1); border-radius: 6px; padding: 12px 16px; margin-top: 16px; min-height: 40px; font-size: 12px; text-align: left; font-family: inherit; transition: all 0.3s ease; color: #00ff41; }
+        .status-bar.success { background: linear-gradient(135deg, rgba(21, 87, 36, 0.2) 0%, rgba(21, 87, 36, 0.1) 100%); color: #51cf66; font-weight: 600; }
+        .status-bar.error { background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(220, 53, 69, 0.1) 100%); color: #ff6b6b; font-weight: 600; }
+        .accept-btn { background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%); color: #000; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; flex: 1; font-family: inherit; font-weight: 600; font-size: 12px; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
+        .decline-btn { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; flex: 1; font-family: inherit; font-weight: 600; font-size: 12px; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
+        .accept-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0, 255, 65, 0.3); }
+        .decline-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3); }
+        .key-status { background: rgba(40, 40, 40, 0.4); border: 1px solid rgba(0, 255, 65, 0.1); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; font-size: 11px; color: rgba(0, 255, 65, 0.7); transition: all 0.3s ease; }
+        .key-status.loaded { background: linear-gradient(135deg, rgba(21, 87, 36, 0.2) 0%, rgba(21, 87, 36, 0.1) 100%); color: #51cf66; border-color: rgba(21, 87, 36, 0.3); }
+        .key-status.loading { background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.1) 100%); color: #ffc107; border-color: rgba(255, 193, 7, 0.3); }
+        .key-status.error { background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(220, 53, 69, 0.1) 100%); color: #ff6b6b; border-color: rgba(220, 53, 69, 0.3); }
+        .passphrase-input { background: rgba(30, 30, 30, 0.9); border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 6px; padding: 12px 16px; margin: 15px 0; color: #00ff41; font-family: inherit; font-size: 13px; width: 100%; transition: all 0.3s ease; }
+        .passphrase-input:focus { outline: none; border-color: #00ff41; box-shadow: 0 0 0 2px rgba(0, 255, 65, 0.1); }
+        .modal-error { color: #ff6b6b; background: rgba(220, 53, 69, 0.1); padding: 8px 12px; border-radius: 4px; margin: 10px 0; font-size: 11px; border: 1px solid rgba(220, 53, 69, 0.3); }
+        .passphrase-help { color: rgba(0, 255, 65, 0.6); font-size: 11px; margin-top: 8px; text-align: left; line-height: 1.4; }
+        .passphrase-help strong { color: #00ff41; }
+        .debug-info { color: #ffc107; background: rgba(255, 193, 7, 0.1); padding: 8px 12px; border-radius: 4px; margin: 10px 0; font-size: 10px; border: 1px solid rgba(255, 193, 7, 0.3); text-align: left; font-family: monospace; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 255, 65, 0.1); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 255, 65, 0.3); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 255, 65, 0.5); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🔐 xsukax PGP Secure Chat</div>
+        <div class="status-indicator"></div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <h3>Your ID</h3>
+            <div id="userId" class="user-id" onclick="copyUserId()" title="Click to copy">
+                Not Connected
+            </div>
+
+            <div class="key-upload">
+                <h4>Upload PGP Keys</h4>
+                <div class="key-status" id="keyStatus">No keys loaded</div>
+                
+                <div class="key-label">Private Key (.asc or .gpg)</div>
+                <input type="file" id="privateKey" class="file-input" accept=".asc,.gpg">
+                
+                <div class="key-label">Public Key (.asc or .gpg)</div>
+                <input type="file" id="publicKey" class="file-input" accept=".asc,.gpg">
+                <button class="btn" onclick="uploadKeys()" id="loadKeysBtn">Load Keys</button>
+            </div>
+
+            <h3>Add Friend</h3>
+            <input type="text" id="friendId" class="input" placeholder="Enter Friend ID (6 chars)" maxlength="6">
+            <button class="btn" onclick="addFriend()">Send Friend Request</button>
+
+            <h3>Friends</h3>
+            <div id="friendsList"></div>
+        </div>
+
+        <div class="chat-area">
+            <div id="messages" class="messages">
+                <div class="status">Connect to server and select a friend to start secure chatting</div>
+            </div>
+            <div class="input-area">
+                <textarea id="messageInput" class="msg-input" placeholder="Type your encrypted message..." rows="2"></textarea>
+                <button class="send-btn" onclick="sendMessage()">🔒 Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Modal -->
+    <div id="connectionModal" class="modal show">
+        <div class="modal-content">
+            <h2>🔐 xsukax PGP Secure Chat</h2>
+            <p>Connect to a secure chat server</p>
+            <input type="text" id="serverInput" class="input" placeholder="Enter server URL (ws://ip:8765)" value="ws://127.0.0.1:8765">
+            <div class="modal-buttons">
+                <button class="test-btn" onclick="testConnection()">Test Connection</button>
+                <button class="connect-btn" onclick="connectToServer()" id="connectModalBtn">Connect to Server</button>
+            </div>
+            <div id="connectionStatus" class="status-bar">Ready to connect...</div>
+        </div>
+    </div>
+
+    <!-- Friend Request Modal -->
+    <div id="friendRequestModal" class="modal">
+        <div class="modal-content">
+            <h3>Friend Request</h3>
+            <p id="requestMessage">User <span id="requestSender"></span> wants to add you as a friend.</p>
+            <div class="modal-buttons">
+                <button class="accept-btn" onclick="respondFriendRequest(true)">Accept</button>
+                <button class="decline-btn" onclick="respondFriendRequest(false)">Decline</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Passphrase Modal -->
+    <div id="passphraseModal" class="modal">
+        <div class="modal-content">
+            <h3>🔑 Private Key Passphrase</h3>
+            <p>If your private key is protected with a passphrase, enter it below.<br>If not, leave blank and continue.</p>
+            <input type="password" id="modalPassphrase" class="passphrase-input" placeholder="Enter passphrase (or leave blank)..." autocomplete="current-password">
+            <div class="passphrase-help">
+                <strong>Instructions:</strong><br>
+                • Enter your passphrase if your key is encrypted<br>
+                • Leave blank if your key has no passphrase<br>
+                • Passphrase is case-sensitive and preserves spaces
+            </div>
+            <div id="passphraseError" class="modal-error" style="display: none;"></div>
+            <div id="debugInfo" class="debug-info" style="display: none;"></div>
+            <div class="modal-buttons">
+                <button class="decline-btn" onclick="cancelPassphrase()">Cancel</button>
+                <button class="accept-btn" onclick="continueWithPassphrase()" id="continueBtn">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let connected = false;
+        let userId = null;
+        let privateKey = null;
+        let publicKey = null;
+        let friends = [];
+        let currentFriend = null;
+        let currentRequest = null;
+        let messages = {};
+        let pendingPrivateKeyText = null;
+        let pendingPublicKeyText = null;
+        let currentPassphrase = null;
+
+        function updateConnectionStatus(message, type = 'info') {
+            const statusBar = document.getElementById('connectionStatus');
+            statusBar.textContent = message;
+            statusBar.className = `status-bar ${type}`;
+        }
+
+        function updateKeyStatus(message, type = 'info') {
+            const keyStatus = document.getElementById('keyStatus');
+            keyStatus.textContent = message;
+            keyStatus.className = `key-status ${type}`;
+        }
+
+        function showPassphraseError(message) {
+            const errorDiv = document.getElementById('passphraseError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hidePassphraseError() {
+            const errorDiv = document.getElementById('passphraseError');
+            errorDiv.style.display = 'none';
+        }
+
+        function showDebugInfo(message) {
+            const debugDiv = document.getElementById('debugInfo');
+            debugDiv.textContent = message;
+            debugDiv.style.display = 'block';
+        }
+
+        function hideDebugInfo() {
+            const debugDiv = document.getElementById('debugInfo');
+            debugDiv.style.display = 'none';
+        }
+
+        async function testConnection() {
+            const serverUrl = document.getElementById('serverInput').value.trim();
+            if (!serverUrl) {
+                updateConnectionStatus('Please enter server URL', 'error');
+                return;
+            }
+
+            updateConnectionStatus('Testing connection...', 'info');
+            
+            try {
+                const testWs = new WebSocket(serverUrl);
+                
+                testWs.onopen = function() {
+                    updateConnectionStatus('✓ Connection test successful!', 'success');
+                    testWs.close();
+                    document.getElementById('connectModalBtn').disabled = false;
+                };
+                
+                testWs.onerror = function() {
+                    updateConnectionStatus('✗ Connection test failed', 'error');
+                    document.getElementById('connectModalBtn').disabled = true;
+                };
+                
+                setTimeout(() => {
+                    if (testWs.readyState === WebSocket.CONNECTING) {
+                        testWs.close();
+                        updateConnectionStatus('✗ Connection timeout', 'error');
+                        document.getElementById('connectModalBtn').disabled = true;
+                    }
+                }, 5000);
+                
+            } catch (error) {
+                updateConnectionStatus('✗ Invalid server URL', 'error');
+                document.getElementById('connectModalBtn').disabled = true;
+            }
+        }
+
+        async function connectToServer() {
+            const serverUrl = document.getElementById('serverInput').value.trim();
+            if (!serverUrl) {
+                updateConnectionStatus('Please enter server URL', 'error');
+                return;
+            }
+
+            try {
+                updateConnectionStatus('Connecting to server...', 'info');
+                document.getElementById('connectModalBtn').disabled = true;
+                
+                ws = new WebSocket(serverUrl);
+                
+                ws.onopen = function() {
+                    connected = true;
+                    updateConnectionStatus('✓ Connected successfully!', 'success');
+                    setTimeout(() => {
+                        document.getElementById('connectionModal').classList.remove('show');
+                    }, 1500);
+                };
+                
+                ws.onmessage = function(event) {
+                    handleServerMessage(JSON.parse(event.data));
+                };
+                
+                ws.onclose = function() {
+                    connected = false;
+                    document.getElementById('userId').textContent = 'Not Connected';
+                    showError('Disconnected from server');
+                };
+                
+                ws.onerror = function() {
+                    updateConnectionStatus('✗ Connection failed', 'error');
+                    document.getElementById('connectModalBtn').disabled = false;
+                };
+                
+            } catch (error) {
+                updateConnectionStatus('✗ Connection error: ' + error.message, 'error');
+                document.getElementById('connectModalBtn').disabled = false;
+            }
+        }
+
+        function handleServerMessage(data) {
+            const type = data.type;
+            
+            if (type === 'user_id_assigned') {
+                userId = data.user_id;
+                document.getElementById('userId').textContent = userId;
+                loadFriends();
+                
+            } else if (type === 'friend_request_received') {
+                currentRequest = data;
+                document.getElementById('requestSender').textContent = data.sender_id;
+                document.getElementById('friendRequestModal').classList.add('show');
+                
+            } else if (type === 'friend_added') {
+                friends.push({
+                    user_id: data.friend_id,
+                    public_key: data.friend_public_key
+                });
+                displayFriends();
+                showSuccess('Friend added!');
+                
+            } else if (type === 'friends_list') {
+                friends = data.friends;
+                displayFriends();
+                
+            } else if (type === 'message_received') {
+                const friendId = data.sender_id === userId ? data.target_id : data.sender_id;
+                if (!messages[friendId]) messages[friendId] = [];
+                messages[friendId].push(data);
+                if (currentFriend === friendId) displayMessages();
+                
+            } else if (type === 'conversation_messages') {
+                messages[data.target_id] = data.messages;
+                if (currentFriend === data.target_id) displayMessages();
+                
+            } else if (type === 'error') {
+                showError(data.message);
+                
+            } else if (type === 'friend_request_sent') {
+                showSuccess('Friend request sent!');
+                document.getElementById('friendId').value = '';
+            }
+        }
+
+        function sendToServer(data) {
+            if (ws && connected) {
+                ws.send(JSON.stringify(data));
+            }
+        }
+
+        async function uploadKeys() {
+            const privateKeyFile = document.getElementById('privateKey').files[0];
+            const publicKeyFile = document.getElementById('publicKey').files[0];
+            
+            if (!privateKeyFile || !publicKeyFile) {
+                showError('Please select both private and public key files');
+                updateKeyStatus('Please select both key files', 'error');
+                return;
+            }
+
+            try {
+                updateKeyStatus('Reading key files...', 'loading');
+                document.getElementById('loadKeysBtn').disabled = true;
+                
+                // Read both key files
+                pendingPrivateKeyText = await privateKeyFile.text();
+                pendingPublicKeyText = await publicKeyFile.text();
+                
+                // Always show passphrase modal
+                updateKeyStatus('Waiting for passphrase input...', 'loading');
+                document.getElementById('passphraseModal').classList.add('show');
+                document.getElementById('modalPassphrase').focus();
+                hidePassphraseError();
+                hideDebugInfo();
+                
+            } catch (error) {
+                updateKeyStatus('Failed to read key files', 'error');
+                showError('Failed to read key files: ' + error.message);
+                document.getElementById('loadKeysBtn').disabled = false;
+                
+                // Clear pending data
+                pendingPrivateKeyText = null;
+                pendingPublicKeyText = null;
+            }
+        }
+
+        async function testPrivateKeyPassphrase(keyText, passphrase) {
+            try {
+                // First, read the private key
+                showDebugInfo('Reading private key...');
+                const key = await openpgp.readPrivateKey({ armoredKey: keyText });
+                
+                // Check if the key is already decrypted (no passphrase needed)
+                showDebugInfo('Checking if key is already decrypted...');
+                
+                // Try to check if key is decrypted by accessing its properties
+                try {
+                    // If we can access the key material without error, it's not encrypted
+                    const keyInfo = key.getKeyIDs();
+                    const isDecrypted = key.isDecrypted();
+                    
+                    showDebugInfo(`Key decryption status: ${isDecrypted ? 'decrypted' : 'encrypted'}`);
+                    
+                    if (isDecrypted) {
+                        // Key is not encrypted, no passphrase needed
+                        if (passphrase === '') {
+                            return { success: true, key: key, needsPassphrase: false };
+                        } else {
+                            // User provided passphrase for unencrypted key
+                            return { success: true, key: key, needsPassphrase: false, warning: 'Key is not encrypted, passphrase ignored' };
+                        }
+                    } else {
+                        // Key is encrypted, needs passphrase
+                        if (passphrase === '') {
+                            return { success: false, needsPassphrase: true, error: 'This private key requires a passphrase' };
+                        } else {
+                            // Try to decrypt with provided passphrase
+                            showDebugInfo('Attempting to decrypt with passphrase...');
+                            try {
+                                const decryptedKey = await openpgp.decryptKey({
+                                    privateKey: key,
+                                    passphrase: passphrase
+                                });
+                                return { success: true, key: decryptedKey, needsPassphrase: true };
+                            } catch (decryptError) {
+                                return { success: false, needsPassphrase: true, error: 'Incorrect passphrase' };
+                            }
+                        }
+                    }
+                } catch (accessError) {
+                    // If we can't access key properties, it might be encrypted
+                    showDebugInfo('Key appears to be encrypted, testing passphrase...');
+                    
+                    if (passphrase === '') {
+                        return { success: false, needsPassphrase: true, error: 'This private key requires a passphrase' };
+                    } else {
+                        try {
+                            const decryptedKey = await openpgp.decryptKey({
+                                privateKey: key,
+                                passphrase: passphrase
+                            });
+                            return { success: true, key: decryptedKey, needsPassphrase: true };
+                        } catch (decryptError) {
+                            return { success: false, needsPassphrase: true, error: 'Incorrect passphrase' };
+                        }
+                    }
+                }
+            } catch (error) {
+                return { success: false, needsPassphrase: false, error: 'Invalid key format: ' + error.message };
+            }
+        }
+
+        async function continueWithPassphrase() {
+            const passphrase = document.getElementById('modalPassphrase').value;
+            
+            try {
+                document.getElementById('continueBtn').disabled = true;
+                hidePassphraseError();
+                hideDebugInfo();
+                updateKeyStatus('Testing private key...', 'loading');
+                
+                showDebugInfo('Starting key validation...');
+                
+                // Test the private key with the provided passphrase
+                const keyTest = await testPrivateKeyPassphrase(pendingPrivateKeyText, passphrase);
+                
+                if (!keyTest.success) {
+                    showPassphraseError(keyTest.error);
+                    showDebugInfo('Key validation failed: ' + keyTest.error);
+                    
+                    document.getElementById('continueBtn').disabled = false;
+                    if (keyTest.needsPassphrase) {
+                        document.getElementById('modalPassphrase').select();
+                    }
+                    updateKeyStatus('Key validation failed', 'error');
+                    return;
+                }
+                
+                // Key is valid, store it
+                privateKey = keyTest.key;
+                currentPassphrase = keyTest.needsPassphrase ? passphrase : null;
+                
+                if (keyTest.warning) {
+                    showDebugInfo(keyTest.warning);
+                } else {
+                    showDebugInfo(`Private key loaded successfully! ${keyTest.needsPassphrase ? 'With passphrase' : 'No passphrase required'}`);
+                }
+                
+                // Load public key
+                updateKeyStatus('Loading public key...', 'loading');
+                showDebugInfo('Loading public key...');
+                
+                try {
+                    publicKey = await openpgp.readKey({ armoredKey: pendingPublicKeyText });
+                    showDebugInfo('Public key loaded successfully!');
+                } catch (pubKeyError) {
+                    console.error('Public key loading error:', pubKeyError);
+                    showPassphraseError('Failed to load public key: ' + pubKeyError.message);
+                    showDebugInfo('Public key error: ' + pubKeyError.message);
+                    document.getElementById('continueBtn').disabled = false;
+                    updateKeyStatus('Public key loading failed', 'error');
+                    return;
+                }
+                
+                // Send public key to server
+                updateKeyStatus('Registering with server...', 'loading');
+                showDebugInfo('Sending public key to server...');
+                
+                sendToServer({
+                    action: 'set_public_key',
+                    public_key: pendingPublicKeyText
+                });
+                
+                // Close modal and complete loading
+                document.getElementById('passphraseModal').classList.remove('show');
+                document.getElementById('modalPassphrase').value = '';
+                
+                updateKeyStatus('🔐 PGP keys loaded successfully!', 'loaded');
+                showSuccess('🔐 PGP keys loaded successfully!');
+                
+                // Clear file inputs
+                document.getElementById('privateKey').value = '';
+                document.getElementById('publicKey').value = '';
+                document.getElementById('loadKeysBtn').disabled = false;
+                
+                // Clear pending data
+                pendingPrivateKeyText = null;
+                pendingPublicKeyText = null;
+                
+            } catch (error) {
+                console.error('Unexpected error during key loading:', error);
+                showPassphraseError('Unexpected error: ' + error.message);
+                showDebugInfo(`Unexpected error: ${error.message}`);
+                document.getElementById('continueBtn').disabled = false;
+                updateKeyStatus('Key loading failed', 'error');
+            }
+        }
+
+        function cancelPassphrase() {
+            document.getElementById('passphraseModal').classList.remove('show');
+            document.getElementById('modalPassphrase').value = '';
+            updateKeyStatus('Key loading cancelled', 'error');
+            document.getElementById('loadKeysBtn').disabled = false;
+            hidePassphraseError();
+            hideDebugInfo();
+            
+            // Clear pending data
+            pendingPrivateKeyText = null;
+            pendingPublicKeyText = null;
+        }
+
+        function addFriend() {
+            const friendId = document.getElementById('friendId').value.trim().toUpperCase();
+            if (!friendId || friendId.length !== 6) {
+                showError('Please enter a valid 6-character friend ID');
+                return;
+            }
+            
+            sendToServer({
+                action: 'send_friend_request',
+                target_id: friendId
+            });
+        }
+
+        function respondFriendRequest(accepted) {
+            if (!currentRequest) return;
+            
+            sendToServer({
+                action: 'respond_friend_request',
+                sender_id: currentRequest.sender_id,
+                accepted: accepted
+            });
+            
+            document.getElementById('friendRequestModal').classList.remove('show');
+            
+            if (accepted) {
+                showSuccess('Friend request accepted!');
+            } else {
+                showSuccess('Friend request declined');
+            }
+            
+            currentRequest = null;
+        }
+
+        async function sendMessage() {
+            if (!currentFriend) return showError('No friend selected');
+            if (!privateKey || !publicKey) return showError('PGP keys not loaded');
+            
+            const messageText = document.getElementById('messageInput').value.trim();
+            if (!messageText) return showError('Enter a message');
+            
+            try {
+                const friend = friends.find(f => f.user_id === currentFriend);
+                if (!friend || !friend.public_key) {
+                    showError('Friend public key not available');
+                    return;
+                }
+                
+                const friendPublicKey = await openpgp.readKey({ armoredKey: friend.public_key });
+                
+                const encrypted = await openpgp.encrypt({
+                    message: await openpgp.createMessage({ text: messageText }),
+                    encryptionKeys: friendPublicKey
+                });
+                
+                sendToServer({
+                    action: 'send_message',
+                    target_id: currentFriend,
+                    encrypted_message: encrypted
+                });
+                
+                document.getElementById('messageInput').value = '';
+                
+            } catch (error) {
+                showError('Encryption failed: ' + error.message);
+            }
+        }
+
+        function loadFriends() {
+            sendToServer({ action: 'get_friends' });
+        }
+
+        function displayFriends() {
+            const friendsList = document.getElementById('friendsList');
+            friendsList.innerHTML = '';
+            
+            friends.forEach(friend => {
+                const item = document.createElement('div');
+                item.className = 'friend-item';
+                item.textContent = friend.user_id;
+                item.onclick = () => selectFriend(friend.user_id);
+                friendsList.appendChild(item);
+            });
+        }
+
+        function selectFriend(friendId) {
+            currentFriend = friendId;
+            document.querySelectorAll('.friend-item').forEach(item => item.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            sendToServer({
+                action: 'get_messages',
+                target_id: friendId
+            });
+        }
+
+        async function displayMessages() {
+            if (!currentFriend) return;
+            
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+            
+            const friendMessages = messages[currentFriend] || [];
+            
+            for (const msg of friendMessages) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${msg.sender_id === userId ? 'own' : 'other'}`;
+                
+                const header = document.createElement('div');
+                header.className = 'msg-header';
+                header.textContent = `${msg.sender_id} - ${new Date(msg.timestamp * 1000).toLocaleTimeString()} 🔐`;
+                
+                const content = document.createElement('div');
+                content.className = 'msg-content';
+                
+                if (msg.encrypted_message && privateKey) {
+                    try {
+                        const message = await openpgp.readMessage({ armoredMessage: msg.encrypted_message });
+                        
+                        // Decrypt the message using the stored private key (already decrypted)
+                        const { data: decrypted } = await openpgp.decrypt({
+                            message,
+                            decryptionKeys: privateKey
+                        });
+                        
+                        content.textContent = decrypted;
+                    } catch (error) {
+                        console.error('Decryption error:', error);
+                        content.textContent = `[Decryption Failed: ${error.message}]`;
+                        content.style.color = '#ff6b6b';
+                        content.style.fontStyle = 'italic';
+                    }
+                } else {
+                    content.textContent = '[Encrypted Message - Keys not loaded]';
+                    content.style.color = '#ffc107';
+                    content.style.fontStyle = 'italic';
+                }
+                
+                messageDiv.appendChild(header);
+                messageDiv.appendChild(content);
+                messagesDiv.appendChild(messageDiv);
+            }
+            
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function copyUserId() {
+            if (userId && userId !== 'Not Connected') {
+                navigator.clipboard.writeText(userId).then(() => {
+                    showSuccess('ID copied to clipboard!');
+                });
+            }
+        }
+
+        function showError(message) {
+            const div = document.createElement('div');
+            div.className = 'error';
+            div.textContent = message;
+            document.querySelector('.sidebar').insertBefore(div, document.querySelector('.sidebar').firstChild);
+            setTimeout(() => div.remove(), 5000);
+        }
+
+        function showSuccess(message) {
+            const div = document.createElement('div');
+            div.className = 'success';
+            div.textContent = message;
+            document.querySelector('.sidebar').insertBefore(div, document.querySelector('.sidebar').firstChild);
+            setTimeout(() => div.remove(), 3000);
+        }
+
+        // Event listeners
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        document.getElementById('modalPassphrase').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                continueWithPassphrase();
+            }
+        });
+
+        // Auto-focus on passphrase input when modal opens
+        document.getElementById('passphraseModal').addEventListener('transitionend', function() {
+            if (this.classList.contains('show')) {
+                document.getElementById('modalPassphrase').focus();
+            }
+        });
+    </script>
+</body>
+</html>
