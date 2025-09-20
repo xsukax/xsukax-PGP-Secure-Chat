@@ -1,96 +1,89 @@
-# xsukax PGP Secure Chat
+# 🔐 xsukax PGP Secure Chat
 
-A privacy-focused, end-to-end encrypted chat application that prioritizes security and user anonymity through military-grade PGP encryption and decentralized architecture.
+A lightweight, privacy-focused real-time chat application that implements end-to-end encryption using OpenPGP standards. Built with security and user privacy as core principles, this application ensures that your conversations remain completely private and secure.
 
 ## Project Overview
 
-xsukax PGP Secure Chat is a minimalist, secure messaging platform designed for users who prioritize privacy and security above all else. The application implements true end-to-end encryption using PGP (Pretty Good Privacy) standards, ensuring that even the server cannot decrypt or access message contents.
+xsukax PGP Secure Chat is a modern web-based messaging platform that combines the proven security of PGP encryption with the convenience of real-time communication. The application consists of a Python WebSocket server that handles message routing and connection management, paired with a responsive web client that performs all cryptographic operations locally in the browser.
 
-The system consists of a lightweight Python WebSocket server and a sophisticated web-based client that handles all encryption operations locally in the browser. Users are identified by randomly generated 6-character IDs, eliminating the need for personal information or account registration.
+**Key Architecture Principles:**
+- **Zero-knowledge server design**: The server never has access to message content or private keys
+- **Client-side encryption**: All cryptographic operations occur in the user's browser
+- **Minimal data persistence**: Only encrypted messages and public keys are stored
+- **Decentralized trust model**: Users manage their own key pairs and verify contacts independently
 
-**Key Characteristics:**
-- **Zero-knowledge architecture**: Server never sees unencrypted message content
-- **Browser-based encryption**: All cryptographic operations performed client-side
-- **Minimal metadata exposure**: No tracking of online status or user behavior
-- **Direct peer-to-peer communication**: Friend-to-friend messaging model
-- **Cross-platform compatibility**: Works on any device with a modern web browser
+The application generates unique 6-character user IDs for each session and facilitates secure peer-to-peer communication through an encrypted friend request system.
 
 ## Security and Privacy Benefits
 
 ### End-to-End Encryption
-- **PGP Implementation**: Utilizes OpenPGP.js (version 5.10.2) for industry-standard encryption
-- **Client-side Processing**: All encryption/decryption occurs in the browser before network transmission
-- **Perfect Forward Secrecy**: Each message is individually encrypted with the recipient's public key
-- **Cryptographic Integrity**: Messages cannot be tampered with or forged in transit
+- **OpenPGP Implementation**: Utilizes the robust OpenPGP.js library for industry-standard encryption
+- **Client-Side Cryptography**: All encryption and decryption operations occur exclusively in the user's browser
+- **Forward Secrecy**: Each message is individually encrypted, preventing retroactive decryption of message history
 
 ### Privacy Protection
-- **Anonymous Identity System**: Users identified only by random 6-character IDs
-- **No Personal Data Collection**: No email addresses, phone numbers, or personal information required
-- **Invisible Presence**: No online status indicators or last-seen timestamps
-- **Minimal Metadata**: Server only routes encrypted messages without content access
-- **Local Key Management**: PGP keys stored and managed entirely on user devices
+- **Zero-Knowledge Architecture**: The server cannot read message content, only route encrypted data
+- **No Persistent User Accounts**: Users are identified by temporary session-based IDs
+- **Minimal Metadata Collection**: The server stores only essential routing information
+- **No Message Content Logging**: Encrypted messages pass through the server without being logged or analyzed
 
-### Infrastructure Security
-- **Decentralized Design**: No reliance on third-party services or cloud providers
-- **Self-hosted Capability**: Complete control over server infrastructure
-- **Minimal Attack Surface**: Simple WebSocket server with limited functionality
-- **Transport Security**: Support for both WS and WSS (TLS) connections
-- **Isolated Sessions**: No persistent user profiles or stored credentials
+### Key Management Security
+- **Local Key Storage**: Private keys never leave the user's device
+- **Passphrase Protection**: Support for passphrase-protected private keys
+- **Key Verification**: Users can verify public key fingerprints before establishing trust
+- **Secure Key Exchange**: Public keys are exchanged through the friend request mechanism
 
-### Network Security
-- **Direct WebSocket Communication**: No intermediate proxies or relays
-- **Optional TLS Encryption**: Additional transport layer security available
-- **Connection Validation**: Built-in connection testing before establishing sessions
-- **Automatic Reconnection**: Resilient connection handling with error recovery
+### Operational Security
+- **Transport Layer Security**: WebSocket connections can be secured with TLS
+- **Connection Health Monitoring**: Automatic ping/pong for connection stability
+- **Graceful Error Handling**: Secure failure modes that don't leak sensitive information
+- **Memory Protection**: Sensitive data handling with appropriate cleanup
 
 ## Features and Advantages
 
 ### Core Functionality
-- **Instant Messaging**: Real-time encrypted communication between friends
-- **Friend Request System**: Secure method to establish trusted connections
-- **Cross-Platform Client**: Single HTML file works on any modern browser
-- **Responsive Design**: Mobile-friendly interface with adaptive layout
-- **Dark Theme**: Professional, eye-friendly interface optimized for extended use
+- **Real-Time Messaging**: Instant delivery of encrypted messages through WebSocket connections
+- **Friend Request System**: Secure method for establishing trusted communication channels
+- **Cross-Platform Compatibility**: Web-based client runs on any modern browser
+- **Responsive Design**: Optimized for both desktop and mobile devices
 
 ### Technical Advantages
-- **No Installation Required**: Client runs directly in web browser
-- **Minimal Dependencies**: Server requires only Python 3 and websockets library
-- **High Performance**: Lightweight architecture with efficient message routing
-- **Scalable Design**: Can handle multiple concurrent users with minimal resources
-- **Easy Deployment**: Simple installation script for Linux servers
+- **Lightweight Architecture**: Minimal resource requirements for both client and server
+- **Easy Deployment**: Simple installation process with automated service setup
+- **Scalable Design**: Efficient handling of multiple concurrent connections
+- **Open Source**: Full transparency and community-driven development
 
 ### User Experience
-- **Intuitive Interface**: Clean, hacker-inspired design with clear navigation
-- **One-Click ID Copying**: Easy sharing of user identifiers
-- **File-based Key Import**: Simple PGP key management through file upload
-- **Real-time Connection Testing**: Verify server connectivity before connecting
-- **Comprehensive Error Handling**: Clear feedback for all user actions
+- **Intuitive Interface**: Clean, modern UI with terminal-inspired aesthetic
+- **Drag-and-Drop Key Import**: Simple PGP key file upload process
+- **Status Indicators**: Real-time connection and encryption status display
+- **Message Persistence**: Encrypted message history maintained per conversation
 
-### Administrative Features
-- **System Service Integration**: Automatic startup and management on Linux systems
-- **Comprehensive Logging**: Detailed server logs for monitoring and debugging
-- **Firewall Configuration**: Automatic port configuration during installation
-- **Service Management**: Standard systemd commands for server control
+### Unique Selling Points
+- **No Registration Required**: Immediate access without account creation
+- **Temporary Identity Model**: Enhanced privacy through session-based user IDs
+- **Browser-Based Encryption**: No software installation required for clients
+- **Self-Hosted Option**: Complete control over your communication infrastructure
 
 ## Installation Instructions
 
 ### Prerequisites
-- **Server**: Linux system (Debian/Ubuntu/CentOS/RHEL/Rocky/AlmaLinux)
-- **Client**: Modern web browser with JavaScript enabled
-- **Network**: Open port 8765 (or custom port) for WebSocket connections
+- Linux server (Ubuntu/Debian or CentOS/RHEL/Rocky/AlmaLinux)
+- Python 3.6 or higher
+- Root or sudo access
+- Network connectivity on port 8765
 
-### Server Installation
+### Automated Installation
 
-#### Automated Installation
-1. **Download the installation script**:
+1. **Download the installation package**:
    ```bash
    git clone https://github.com/xsukax/xsukax-PGP-Secure-Chat.git
    cd xsukax-PGP-Secure-Chat
-   chmod +x install_service.sh
    ```
 
-2. **Run the installation**:
+2. **Run the installation script**:
    ```bash
+   sudo chmod +x install_service.sh
    sudo ./install_service.sh install
    ```
 
@@ -99,55 +92,71 @@ The system consists of a lightweight Python WebSocket server and a sophisticated
    sudo systemctl status xsukax-pgp-chat
    ```
 
-#### Manual Installation
-1. **Install dependencies**:
-   ```bash
-   # Debian/Ubuntu
-   sudo apt update && sudo apt install -y python3 python3-pip
-   
-   # CentOS/RHEL
-   sudo yum install -y python3 python3-pip
-   ```
+### Manual Installation
 
-2. **Install Python packages**:
+If you prefer manual installation or need to customize the setup:
+
+1. **Install Python dependencies**:
    ```bash
+   sudo apt update  # For Ubuntu/Debian
+   sudo apt install python3 python3-pip python3-venv
+   
+   # Or for CentOS/RHEL:
+   sudo yum install python3 python3-pip
+   
    pip3 install websockets asyncio
    ```
 
-3. **Deploy server**:
+2. **Create application directory**:
    ```bash
    sudo mkdir -p /opt/xsukax-pgp-chat
    sudo cp server.py /opt/xsukax-pgp-chat/
    sudo chmod +x /opt/xsukax-pgp-chat/server.py
    ```
 
-4. **Create systemd service** (optional):
+3. **Create systemd service** (optional but recommended):
    ```bash
-   sudo ./install_service.sh install
+   sudo cp xsukax-pgp-chat.service /etc/systemd/system/
+   sudo systemctl daemon-reload
+   sudo systemctl enable xsukax-pgp-chat
+   sudo systemctl start xsukax-pgp-chat
    ```
 
-### Client Setup
-1. **Download the client**:
-   ```bash
-   wget https://raw.githubusercontent.com/xsukax/xsukax-PGP-Secure-Chat/refs/heads/main/Client.html
-   ```
+### Firewall Configuration
 
-2. **Open in browser**:
-   - Double-click `Client.html` or
-   - Open directly in your preferred web browser
+Open the required port for WebSocket connections:
 
-### PGP Key Generation
-Generate your PGP key pair using GPG:
-
+**For UFW (Ubuntu/Debian)**:
 ```bash
-# Generate new key pair
-gpg --full-generate-key
+sudo ufw allow 8765/tcp
+```
 
-# Export public key
-gpg --armor --export YOUR_KEY_ID > public_key.asc
+**For FirewallD (CentOS/RHEL)**:
+```bash
+sudo firewall-cmd --permanent --add-port=8765/tcp
+sudo firewall-cmd --reload
+```
 
-# Export private key
-gpg --armor --export-secret-keys YOUR_KEY_ID > private_key.asc
+### TLS/SSL Setup (Recommended)
+
+For production deployments, configure a reverse proxy with TLS:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name your-domain.com;
+    
+    ssl_certificate /path/to/certificate.crt;
+    ssl_certificate_key /path/to/private.key;
+    
+    location / {
+        proxy_pass http://localhost:8765;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+}
 ```
 
 ## Usage Guide
@@ -156,19 +165,27 @@ gpg --armor --export-secret-keys YOUR_KEY_ID > private_key.asc
 
 ```mermaid
 flowchart TD
-    A[Open client.html] --> B[Connection Modal Appears]
-    B --> C[Enter Server URL]
-    C --> D[Test Connection]
-    D --> E{Connection Test}
-    E -->|Success| F[Connect to Server]
-    E -->|Failed| G[Check URL/Server Status]
-    G --> C
-    F --> H[Receive Unique 6-Char ID]
-    H --> I[Upload PGP Keys]
-    I --> J[Ready to Chat]
+    A[Access Web Client] --> B[Connect to Server]
+    B --> C[Receive Unique User ID]
+    C --> D[Generate or Import PGP Keys]
+    D --> E[Upload Public/Private Keys]
+    E --> F[Ready for Secure Communication]
+    
+    style A fill:#e1f5fe
+    style F fill:#c8e6c9
 ```
 
-### Establishing Connections
+### Setting Up Your Keys
+
+1. **Access the application** by opening `Client.html` in your web browser
+2. **Connect to server** by entering the WebSocket URL (e.g., `ws://your-server:8765`)
+3. **Import your PGP keys**:
+   - Click "Choose Files" for both private and public key slots
+   - Select your `.asc` or `.gpg` key files
+   - Click "Load Keys"
+   - Enter your private key passphrase when prompted (or leave blank if none)
+
+### Adding Friends and Communication Flow
 
 ```mermaid
 sequenceDiagram
@@ -176,49 +193,72 @@ sequenceDiagram
     participant S as Server
     participant B as User B
     
-    A->>S: Send Friend Request (Target: User B ID)
-    S->>B: Friend Request Notification
+    A->>S: Send Friend Request (B's ID)
+    S->>B: Forward Friend Request
     B->>S: Accept/Decline Request
-    S->>A: Request Response
-    Note over A,B: If accepted, public keys exchanged
-    A->>B: Encrypted Message
-    B->>A: Encrypted Reply
+    S->>A: Confirmation
+    
+    Note over A,B: If accepted, public keys are exchanged
+    
+    A->>A: Encrypt message with B's public key
+    A->>S: Send encrypted message
+    S->>B: Forward encrypted message
+    B->>B: Decrypt with private key
+    
+    style A fill:#e3f2fd
+    style B fill:#e8f5e8
+    style S fill:#fff3e0
 ```
 
-### Daily Workflow
+### Step-by-Step Communication Process
 
-1. **Connect to Server**:
-   - Open `Client.html` in browser
-   - Enter server URL (e.g., `ws://your-server.com:8765`)
-   - Test and establish connection
-   - Note your assigned 6-character ID
+1. **Add a Friend**:
+   - Obtain your friend's 6-character user ID
+   - Enter the ID in the "Add Friend" field
+   - Click "Send Friend Request"
+   - Wait for your friend to accept the request
 
-2. **Key Management**:
-   - Upload your private key (.asc or .gpg file)
-   - Upload your public key (.asc or .gpg file)
-   - Keys are processed locally and never transmitted
+2. **Send Encrypted Messages**:
+   - Select your friend from the friends list
+   - Type your message in the text area
+   - Click "Send" - the message is automatically encrypted
+   - Your friend receives and decrypts the message automatically
 
-3. **Adding Friends**:
-   - Obtain friend's 6-character ID through secure channel
-   - Enter ID and send friend request
-   - Wait for acceptance notification
+3. **Message Security Verification**:
+   - All messages display a lock icon indicating encryption
+   - Failed decryption attempts are clearly marked
+   - Connection status is continuously monitored
 
-4. **Secure Messaging**:
-   - Select friend from list
-   - Type message in input area
-   - Messages automatically encrypted before transmission
-   - View decrypted messages in chat area
+### Key Management Workflow
 
-### Server Management
+```mermaid
+graph LR
+    A[Generate Keys Externally] --> B[Import Private Key]
+    B --> C[Import Public Key]
+    C --> D[Enter Passphrase]
+    D --> E{Key Validation}
+    E -->|Success| F[Keys Loaded]
+    E -->|Failure| G[Error Display]
+    G --> D
+    F --> H[Register Public Key with Server]
+    H --> I[Ready for Communication]
+    
+    style F fill:#c8e6c9
+    style G fill:#ffcdd2
+    style I fill:#e1f5fe
+```
 
+### Administration and Monitoring
+
+**Service Management**:
 ```bash
-# Start service
+# Start the service
 sudo systemctl start xsukax-pgp-chat
 
-# Stop service
+# Stop the service
 sudo systemctl stop xsukax-pgp-chat
 
-# Restart service
+# Restart the service
 sudo systemctl restart xsukax-pgp-chat
 
 # View status
@@ -226,109 +266,64 @@ sudo systemctl status xsukax-pgp-chat
 
 # View logs
 sudo journalctl -u xsukax-pgp-chat -f
-
-# Uninstall completely
-sudo ./install_service.sh uninstall
 ```
 
-### Security Best Practices
+**Monitoring Active Connections**:
+The server logs provide information about:
+- Client connections and disconnections
+- Friend request activities
+- Message routing (encrypted content only)
+- Error conditions and recovery
 
-1. **Key Security**:
-   - Generate keys on trusted, offline systems
-   - Use strong passphrases for private keys
-   - Store backup copies in secure locations
-   - Never share private keys
+### Troubleshooting Common Issues
 
-2. **Communication Security**:
-   - Verify friend IDs through secure channels
-   - Use WSS (TLS) connections when possible
-   - Regularly update client and server software
-   - Monitor server logs for suspicious activity
+**Connection Problems**:
+- Verify server is running: `sudo systemctl status xsukax-pgp-chat`
+- Check firewall rules allow port 8765
+- Ensure WebSocket URL is correct (ws:// not http://)
 
-3. **Operational Security**:
-   - Access chat only from trusted devices
-   - Clear browser cache after sensitive conversations
-   - Use VPN or Tor for additional anonymity
-   - Implement server firewall rules appropriately
+**Key Loading Issues**:
+- Verify key file formats (.asc or .gpg)
+- Check passphrase accuracy (case-sensitive)
+- Ensure private and public keys match
 
-### Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| Connection Failed | Check server URL, firewall settings, and server status |
-| Key Upload Error | Verify file format (.asc/.gpg) and key validity |
-| Decryption Failed | Ensure correct private key is loaded |
-| Friend Request Failed | Verify target ID exists and is online |
-| Service Won't Start | Check logs with `journalctl -u xsukax-pgp-chat` |
-
-## System Architecture
-
-```mermaid
-graph TB
-    subgraph "Client Side (Browser)"
-        UI[Web Interface]
-        OPG[OpenPGP.js]
-        KM[Key Management]
-        WS[WebSocket Client]
-    end
-    
-    subgraph "Network"
-        WSC[WebSocket Connection]
-    end
-    
-    subgraph "Server Side (Linux)"
-        WSS[WebSocket Server]
-        UM[User Management]
-        MR[Message Routing]
-        FR[Friend Requests]
-    end
-    
-    UI --> OPG
-    OPG --> KM
-    UI --> WS
-    WS --> WSC
-    WSC --> WSS
-    WSS --> UM
-    WSS --> MR
-    WSS --> FR
-    
-    classDef client fill:#e1f5fe
-    classDef server fill:#f3e5f5
-    classDef network fill:#fff3e0
-    
-    class UI,OPG,KM,WS client
-    class WSS,UM,MR,FR server
-    class WSC network
-```
+**Message Decryption Failures**:
+- Confirm friend's public key is properly loaded
+- Verify your private key is correctly decrypted
+- Check that you're friends with the message sender
 
 ## Licensing Information
 
-This project is licensed under the **GNU General Public License v3.0** (GPL-3.0).
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
 
-### What this means:
+### What This Means for Users
 
-**For Users:**
-- You are free to use, modify, and distribute this software
-- You can use it for personal or commercial purposes
-- No warranty is provided - use at your own risk
-- You must preserve copyright and license notices
+**Freedom to Use**: You are free to use this software for any purpose, including commercial applications, without paying licensing fees.
 
-**For Contributors:**
-- Any modifications or derivative works must also be licensed under GPL-3.0
-- Source code must be made available when distributing the software
-- You must document any changes made to the original code
-- Patent rights are automatically granted to users
+**Freedom to Study and Modify**: You have the right to examine the source code, understand how it works, and modify it to suit your needs.
 
-**For Distributors:**
-- You must provide source code alongside any distributed binaries
-- You must include the full license text
-- You cannot impose additional restrictions beyond those in GPL-3.0
-- You must make recipients aware of their rights under the license
+**Freedom to Distribute**: You may redistribute copies of the software to others, either in original or modified form.
 
-The GPL-3.0 ensures that this software remains free and open-source, protecting user freedoms while encouraging collaborative development and improvement.
+**Copyleft Protection**: Any modifications or derivative works must also be licensed under GPL-3.0, ensuring the software remains open and free.
 
-For the complete license text, see the [LICENSE](LICENSE) file in this repository or visit: https://www.gnu.org/licenses/gpl-3.0.html
+### What This Means for Contributors
+
+**Open Source Requirement**: All contributions become part of the GPL-3.0 licensed codebase and must be compatible with this license.
+
+**No Proprietary Derivatives**: The copyleft nature of GPL-3.0 prevents the creation of proprietary versions of this software.
+
+**Patent Protection**: The license includes provisions that protect users from patent-related legal issues.
+
+### Compliance Requirements
+
+If you distribute this software (modified or unmodified):
+- Include the full GPL-3.0 license text
+- Provide access to the corresponding source code
+- Clearly indicate any modifications made to the original code
+- Ensure derivative works are also licensed under GPL-3.0
+
+For the complete license text, see the [LICENSE](LICENSE) file in this repository or visit [https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html).
 
 ---
 
-**Note**: This software implements cryptographic functionality. Please verify compliance with your local laws regarding the use and distribution of encryption software before deployment.
+**Security Notice**: While this application implements strong cryptographic practices, users should conduct their own security review before using it for highly sensitive communications. For maximum security, deploy on infrastructure you control and audit the code thoroughly.
