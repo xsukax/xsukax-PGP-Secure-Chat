@@ -88,7 +88,7 @@ install_dependencies() {
     esac
     
     # Install Python packages
-    pip3 install websockets asyncio
+    pip3 install websockets asyncio --break-system-packages
     
     print_success "Dependencies installed"
 }
