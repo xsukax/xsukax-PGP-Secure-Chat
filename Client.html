@@ -35,6 +35,7 @@
         .msg-input:focus { outline: none; border-color: #00ff41; box-shadow: 0 0 0 2px rgba(0, 255, 65, 0.1); }
         .send-btn { background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%); color: #000; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 12px; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
         .send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0, 255, 65, 0.3); }
+        .send-btn:disabled { background: #444; color: #666; cursor: not-allowed; transform: none; box-shadow: none; }
         .status { font-size: 12px; color: rgba(0, 255, 65, 0.7); text-align: center; padding: 20px; opacity: 0.8; font-style: italic; }
         .user-id { background: linear-gradient(135deg, rgba(0, 255, 65, 0.1) 0%, rgba(0, 255, 65, 0.2) 100%); color: #00ff41; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; text-align: center; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s ease; border: 1px solid rgba(0, 255, 65, 0.2); text-shadow: 0 0 10px rgba(0, 255, 65, 0.3); }
         .user-id:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0, 255, 65, 0.2); }
@@ -66,6 +67,16 @@
         .decline-btn { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; flex: 1; font-family: inherit; font-weight: 600; font-size: 12px; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
         .accept-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0, 255, 65, 0.3); }
         .decline-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3); }
+        .key-status { background: rgba(40, 40, 40, 0.4); border: 1px solid rgba(0, 255, 65, 0.1); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; font-size: 11px; color: rgba(0, 255, 65, 0.7); transition: all 0.3s ease; }
+        .key-status.loaded { background: linear-gradient(135deg, rgba(21, 87, 36, 0.2) 0%, rgba(21, 87, 36, 0.1) 100%); color: #51cf66; border-color: rgba(21, 87, 36, 0.3); }
+        .key-status.loading { background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.1) 100%); color: #ffc107; border-color: rgba(255, 193, 7, 0.3); }
+        .key-status.error { background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(220, 53, 69, 0.1) 100%); color: #ff6b6b; border-color: rgba(220, 53, 69, 0.3); }
+        .passphrase-input { background: rgba(30, 30, 30, 0.9); border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 6px; padding: 12px 16px; margin: 15px 0; color: #00ff41; font-family: inherit; font-size: 13px; width: 100%; transition: all 0.3s ease; }
+        .passphrase-input:focus { outline: none; border-color: #00ff41; box-shadow: 0 0 0 2px rgba(0, 255, 65, 0.1); }
+        .modal-error { color: #ff6b6b; background: rgba(220, 53, 69, 0.1); padding: 8px 12px; border-radius: 4px; margin: 10px 0; font-size: 11px; border: 1px solid rgba(220, 53, 69, 0.3); }
+        .passphrase-help { color: rgba(0, 255, 65, 0.6); font-size: 11px; margin-top: 8px; text-align: left; line-height: 1.4; }
+        .passphrase-help strong { color: #00ff41; }
+        .debug-info { color: #ffc107; background: rgba(255, 193, 7, 0.1); padding: 8px 12px; border-radius: 4px; margin: 10px 0; font-size: 10px; border: 1px solid rgba(255, 193, 7, 0.3); text-align: left; font-family: monospace; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: rgba(0, 255, 65, 0.1); border-radius: 2px; }
         ::-webkit-scrollbar-thumb { background: rgba(0, 255, 65, 0.3); border-radius: 2px; }
@@ -87,11 +98,14 @@
 
             <div class="key-upload">
                 <h4>Upload PGP Keys</h4>
+                <div class="key-status" id="keyStatus">No keys loaded</div>
+                
                 <div class="key-label">Private Key (.asc or .gpg)</div>
                 <input type="file" id="privateKey" class="file-input" accept=".asc,.gpg">
+                
                 <div class="key-label">Public Key (.asc or .gpg)</div>
                 <input type="file" id="publicKey" class="file-input" accept=".asc,.gpg">
-                <button class="btn" onclick="uploadKeys()">Load Keys</button>
+                <button class="btn" onclick="uploadKeys()" id="loadKeysBtn">Load Keys</button>
             </div>
 
             <h3>Add Friend</h3>
@@ -118,7 +132,7 @@
         <div class="modal-content">
             <h2>🔐 xsukax PGP Secure Chat</h2>
             <p>Connect to a secure chat server</p>
-            <input type="text" id="serverInput" class="input" placeholder="Enter server URL (ws://ip:8765)" value="ws://localhost:8765">
+            <input type="text" id="serverInput" class="input" placeholder="Enter server URL (ws://ip:8765)" value="ws://95.179.198.89:8765">
             <div class="modal-buttons">
                 <button class="test-btn" onclick="testConnection()">Test Connection</button>
                 <button class="connect-btn" onclick="connectToServer()" id="connectModalBtn">Connect to Server</button>
@@ -139,6 +153,27 @@
         </div>
     </div>
 
+    <!-- Passphrase Modal -->
+    <div id="passphraseModal" class="modal">
+        <div class="modal-content">
+            <h3>🔑 Private Key Passphrase</h3>
+            <p>If your private key is protected with a passphrase, enter it below.<br>If not, leave blank and continue.</p>
+            <input type="password" id="modalPassphrase" class="passphrase-input" placeholder="Enter passphrase (or leave blank)..." autocomplete="current-password">
+            <div class="passphrase-help">
+                <strong>Instructions:</strong><br>
+                • Enter your passphrase if your key is encrypted<br>
+                • Leave blank if your key has no passphrase<br>
+                • Passphrase is case-sensitive and preserves spaces
+            </div>
+            <div id="passphraseError" class="modal-error" style="display: none;"></div>
+            <div id="debugInfo" class="debug-info" style="display: none;"></div>
+            <div class="modal-buttons">
+                <button class="decline-btn" onclick="cancelPassphrase()">Cancel</button>
+                <button class="accept-btn" onclick="continueWithPassphrase()" id="continueBtn">Continue</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let ws = null;
         let connected = false;
@@ -149,11 +184,42 @@
         let currentFriend = null;
         let currentRequest = null;
         let messages = {};
+        let pendingPrivateKeyText = null;
+        let pendingPublicKeyText = null;
+        let currentPassphrase = null;
 
         function updateConnectionStatus(message, type = 'info') {
             const statusBar = document.getElementById('connectionStatus');
             statusBar.textContent = message;
             statusBar.className = `status-bar ${type}`;
+        }
+
+        function updateKeyStatus(message, type = 'info') {
+            const keyStatus = document.getElementById('keyStatus');
+            keyStatus.textContent = message;
+            keyStatus.className = `key-status ${type}`;
+        }
+
+        function showPassphraseError(message) {
+            const errorDiv = document.getElementById('passphraseError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hidePassphraseError() {
+            const errorDiv = document.getElementById('passphraseError');
+            errorDiv.style.display = 'none';
+        }
+
+        function showDebugInfo(message) {
+            const debugDiv = document.getElementById('debugInfo');
+            debugDiv.textContent = message;
+            debugDiv.style.display = 'block';
+        }
+
+        function hideDebugInfo() {
+            const debugDiv = document.getElementById('debugInfo');
+            debugDiv.style.display = 'none';
         }
 
         async function testConnection() {
@@ -291,28 +357,199 @@
             
             if (!privateKeyFile || !publicKeyFile) {
                 showError('Please select both private and public key files');
+                updateKeyStatus('Please select both key files', 'error');
                 return;
             }
 
             try {
-                const privateKeyText = await privateKeyFile.text();
-                const publicKeyText = await publicKeyFile.text();
+                updateKeyStatus('Reading key files...', 'loading');
+                document.getElementById('loadKeysBtn').disabled = true;
                 
-                privateKey = await openpgp.readPrivateKey({ armoredKey: privateKeyText });
-                publicKey = await openpgp.readKey({ armoredKey: publicKeyText });
+                // Read both key files
+                pendingPrivateKeyText = await privateKeyFile.text();
+                pendingPublicKeyText = await publicKeyFile.text();
+                
+                // Always show passphrase modal
+                updateKeyStatus('Waiting for passphrase input...', 'loading');
+                document.getElementById('passphraseModal').classList.add('show');
+                document.getElementById('modalPassphrase').focus();
+                hidePassphraseError();
+                hideDebugInfo();
+                
+            } catch (error) {
+                updateKeyStatus('Failed to read key files', 'error');
+                showError('Failed to read key files: ' + error.message);
+                document.getElementById('loadKeysBtn').disabled = false;
+                
+                // Clear pending data
+                pendingPrivateKeyText = null;
+                pendingPublicKeyText = null;
+            }
+        }
+
+        async function testPrivateKeyPassphrase(keyText, passphrase) {
+            try {
+                // First, read the private key
+                showDebugInfo('Reading private key...');
+                const key = await openpgp.readPrivateKey({ armoredKey: keyText });
+                
+                // Check if the key is already decrypted (no passphrase needed)
+                showDebugInfo('Checking if key is already decrypted...');
+                
+                // Try to check if key is decrypted by accessing its properties
+                try {
+                    // If we can access the key material without error, it's not encrypted
+                    const keyInfo = key.getKeyIDs();
+                    const isDecrypted = key.isDecrypted();
+                    
+                    showDebugInfo(`Key decryption status: ${isDecrypted ? 'decrypted' : 'encrypted'}`);
+                    
+                    if (isDecrypted) {
+                        // Key is not encrypted, no passphrase needed
+                        if (passphrase === '') {
+                            return { success: true, key: key, needsPassphrase: false };
+                        } else {
+                            // User provided passphrase for unencrypted key
+                            return { success: true, key: key, needsPassphrase: false, warning: 'Key is not encrypted, passphrase ignored' };
+                        }
+                    } else {
+                        // Key is encrypted, needs passphrase
+                        if (passphrase === '') {
+                            return { success: false, needsPassphrase: true, error: 'This private key requires a passphrase' };
+                        } else {
+                            // Try to decrypt with provided passphrase
+                            showDebugInfo('Attempting to decrypt with passphrase...');
+                            try {
+                                const decryptedKey = await openpgp.decryptKey({
+                                    privateKey: key,
+                                    passphrase: passphrase
+                                });
+                                return { success: true, key: decryptedKey, needsPassphrase: true };
+                            } catch (decryptError) {
+                                return { success: false, needsPassphrase: true, error: 'Incorrect passphrase' };
+                            }
+                        }
+                    }
+                } catch (accessError) {
+                    // If we can't access key properties, it might be encrypted
+                    showDebugInfo('Key appears to be encrypted, testing passphrase...');
+                    
+                    if (passphrase === '') {
+                        return { success: false, needsPassphrase: true, error: 'This private key requires a passphrase' };
+                    } else {
+                        try {
+                            const decryptedKey = await openpgp.decryptKey({
+                                privateKey: key,
+                                passphrase: passphrase
+                            });
+                            return { success: true, key: decryptedKey, needsPassphrase: true };
+                        } catch (decryptError) {
+                            return { success: false, needsPassphrase: true, error: 'Incorrect passphrase' };
+                        }
+                    }
+                }
+            } catch (error) {
+                return { success: false, needsPassphrase: false, error: 'Invalid key format: ' + error.message };
+            }
+        }
+
+        async function continueWithPassphrase() {
+            const passphrase = document.getElementById('modalPassphrase').value;
+            
+            try {
+                document.getElementById('continueBtn').disabled = true;
+                hidePassphraseError();
+                hideDebugInfo();
+                updateKeyStatus('Testing private key...', 'loading');
+                
+                showDebugInfo('Starting key validation...');
+                
+                // Test the private key with the provided passphrase
+                const keyTest = await testPrivateKeyPassphrase(pendingPrivateKeyText, passphrase);
+                
+                if (!keyTest.success) {
+                    showPassphraseError(keyTest.error);
+                    showDebugInfo('Key validation failed: ' + keyTest.error);
+                    
+                    document.getElementById('continueBtn').disabled = false;
+                    if (keyTest.needsPassphrase) {
+                        document.getElementById('modalPassphrase').select();
+                    }
+                    updateKeyStatus('Key validation failed', 'error');
+                    return;
+                }
+                
+                // Key is valid, store it
+                privateKey = keyTest.key;
+                currentPassphrase = keyTest.needsPassphrase ? passphrase : null;
+                
+                if (keyTest.warning) {
+                    showDebugInfo(keyTest.warning);
+                } else {
+                    showDebugInfo(`Private key loaded successfully! ${keyTest.needsPassphrase ? 'With passphrase' : 'No passphrase required'}`);
+                }
+                
+                // Load public key
+                updateKeyStatus('Loading public key...', 'loading');
+                showDebugInfo('Loading public key...');
+                
+                try {
+                    publicKey = await openpgp.readKey({ armoredKey: pendingPublicKeyText });
+                    showDebugInfo('Public key loaded successfully!');
+                } catch (pubKeyError) {
+                    console.error('Public key loading error:', pubKeyError);
+                    showPassphraseError('Failed to load public key: ' + pubKeyError.message);
+                    showDebugInfo('Public key error: ' + pubKeyError.message);
+                    document.getElementById('continueBtn').disabled = false;
+                    updateKeyStatus('Public key loading failed', 'error');
+                    return;
+                }
+                
+                // Send public key to server
+                updateKeyStatus('Registering with server...', 'loading');
+                showDebugInfo('Sending public key to server...');
                 
                 sendToServer({
                     action: 'set_public_key',
-                    public_key: publicKeyText
+                    public_key: pendingPublicKeyText
                 });
                 
+                // Close modal and complete loading
+                document.getElementById('passphraseModal').classList.remove('show');
+                document.getElementById('modalPassphrase').value = '';
+                
+                updateKeyStatus('🔐 PGP keys loaded successfully!', 'loaded');
                 showSuccess('🔐 PGP keys loaded successfully!');
+                
+                // Clear file inputs
                 document.getElementById('privateKey').value = '';
                 document.getElementById('publicKey').value = '';
+                document.getElementById('loadKeysBtn').disabled = false;
+                
+                // Clear pending data
+                pendingPrivateKeyText = null;
+                pendingPublicKeyText = null;
                 
             } catch (error) {
-                showError('Failed to load keys: ' + error.message);
+                console.error('Unexpected error during key loading:', error);
+                showPassphraseError('Unexpected error: ' + error.message);
+                showDebugInfo(`Unexpected error: ${error.message}`);
+                document.getElementById('continueBtn').disabled = false;
+                updateKeyStatus('Key loading failed', 'error');
             }
+        }
+
+        function cancelPassphrase() {
+            document.getElementById('passphraseModal').classList.remove('show');
+            document.getElementById('modalPassphrase').value = '';
+            updateKeyStatus('Key loading cancelled', 'error');
+            document.getElementById('loadKeysBtn').disabled = false;
+            hidePassphraseError();
+            hideDebugInfo();
+            
+            // Clear pending data
+            pendingPrivateKeyText = null;
+            pendingPublicKeyText = null;
         }
 
         function addFriend() {
@@ -432,16 +669,24 @@
                 if (msg.encrypted_message && privateKey) {
                     try {
                         const message = await openpgp.readMessage({ armoredMessage: msg.encrypted_message });
+                        
+                        // Decrypt the message using the stored private key (already decrypted)
                         const { data: decrypted } = await openpgp.decrypt({
                             message,
                             decryptionKeys: privateKey
                         });
+                        
                         content.textContent = decrypted;
                     } catch (error) {
-                        content.textContent = '[Decryption Failed]';
+                        console.error('Decryption error:', error);
+                        content.textContent = `[Decryption Failed: ${error.message}]`;
+                        content.style.color = '#ff6b6b';
+                        content.style.fontStyle = 'italic';
                     }
                 } else {
-                    content.textContent = '[Encrypted Message]';
+                    content.textContent = '[Encrypted Message - Keys not loaded]';
+                    content.style.color = '#ffc107';
+                    content.style.fontStyle = 'italic';
                 }
                 
                 messageDiv.appendChild(header);
@@ -476,10 +721,25 @@
             setTimeout(() => div.remove(), 3000);
         }
 
+        // Event listeners
         document.getElementById('messageInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
+            }
+        });
+
+        document.getElementById('modalPassphrase').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                continueWithPassphrase();
+            }
+        });
+
+        // Auto-focus on passphrase input when modal opens
+        document.getElementById('passphraseModal').addEventListener('transitionend', function() {
+            if (this.classList.contains('show')) {
+                document.getElementById('modalPassphrase').focus();
             }
         });
     </script>
