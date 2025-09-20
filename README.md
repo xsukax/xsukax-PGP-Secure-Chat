@@ -1,4 +1,4 @@
-# 🔐 xsukax PGP Secure Chat
+# xsukax PGP Secure Chat
 
 A lightweight, privacy-focused real-time chat application that implements end-to-end encryption using OpenPGP standards. Built with security and user privacy as core principles, this application ensures that your conversations remain completely private and secure.
 
@@ -205,9 +205,6 @@ sequenceDiagram
     S->>B: Forward encrypted message
     B->>B: Decrypt with private key
     
-    style A fill:#e3f2fd
-    style B fill:#e8f5e8
-    style S fill:#fff3e0
 ```
 
 ### Step-by-Step Communication Process
